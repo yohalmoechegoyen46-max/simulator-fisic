@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora y Visualizador Vectorial 2D</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --panel-bg: #161b22;
+            --panel-border: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-green: #2ea043;
+            --accent-yellow: #f1e05a;
+            --accent-red: #ff7b72;
+            --accent-blue: #58a6ff;
+            --accent-purple: #bc8cff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .header-title {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .top-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .bottom-container {
+            width: 100%;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title span.number {
+            color: var(--accent-green);
+        }
+
+        .live-tag {
+            font-size: 0.75rem;
+            background: rgba(46, 160, 67, 0.2);
+            color: var(--accent-green);
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--accent-green);
+        }
+
+        .vector-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .vector-card {
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .vector-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .vector-tag {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .btn-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .btn-delete:hover {
+            color: var(--accent-red);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .input-field {
+            display: flex;
+            align-items: center;
+            background: #161b22;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+
+        .input-field input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .input-field span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-add-vector {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: transparent;
+            border: 1px dashed var(--panel-border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-add-vector:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 520px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #090d11;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        canvas#planoCartesiano {
+            background: transparent;
+            cursor: crosshair;
+        }
+
+        .canvas-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .report-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .stat-card .unit {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        /* ESTILOS PARA LOS CONTENEDORES DESPLEGABLES (COLLAPSIBLE) */
+        details.collapsible-section {
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        details.collapsible-section[open] {
+            border-color: var(--panel-border);
+        }
+
+        summary.collapsible-header {
+            padding: 14px 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            background: #161b22;
+        }
+
+        summary.collapsible-header:hover {
+            background: #1c2128;
+            color: #fff;
+        }
+
+        summary.collapsible-header::-webkit-details-marker {
+            display: none;
+        }
+
+        summary.collapsible-header .arrow-icon {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        details[open] summary.collapsible-header .arrow-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            padding: 15px;
+            background: #0d1117;
+        }
+
+        .dcl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 15px;
+        }
+
+        .dcl-card {
+            background: #161b22;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .dcl-canvas-container {
+            width: 100px;
+            height: 100px;
+            background: #0d1117;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .dcl-details {
+            flex: 1;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .dcl-details .title {
+            font-weight: bold;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .math-breakdown-panel {
+            font-family: monospace;
+            line-height: 1.6;
+        }
+
+        .math-breakdown-panel h4 {
+            color: var(--accent-green);
+            margin-bottom: 10px;
+            font-family: sans-serif;
+        }
+
+        .resultant-detail-box {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            background: #0d1117;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .resultant-canvas-box {
+            width: 200px;
+            height: 200px;
+            background: #161b22;
+            border-radius: 4px;
+        }
+
+        .resultant-info-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .resultant-header-val {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--accent-yellow);
+        }
+
+        .info-item {
+            border-top: 1px solid var(--panel-border);
+            padding-top: 6px;
+        }
+
+        .info-item .lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .info-item .val {
+            font-size: 1rem;
+            color: #fff;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="header-title">Calculadora y Visualizador Vectorial 2D</h1>
+
+    <!-- PARTE SUPERIOR: 01 Define tus Fuerzas | 02 Plano Cartesiano -->
+    <div class="top-container">
+        
+        <!-- SECCIÓN 01: DEFINE TUS FUERZAS -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="number">01</span> Define tus fuerzas
+                </div>
+                <span id="vectorCount" style="color: var(--text-muted); font-size: 0.85rem;">0 VECTORES</span>
+            </div>
+
+            <div class="vector-list" id="vectorList">
+                <!-- Tarjetas dinámicas -->
+            </div>
+
+            <button class="btn-add-vector" onclick="agregarNuevoVector()">+ Añadir vector</button>
+        </div>
+
+        <!-- SECCIÓN 02: PLANO CARTESIANO -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="number">02</span> Plano cartesiano
+                </div>
+                <span class="live-tag">• EN VIVO</span>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="planoCartesiano" width="550" height="480"></canvas>
+                <div class="canvas-legend">
+                    <span>Visualización de fuerzas individuales</span>
+                    <span>Escala dinámica • Interactivo (Arrastra las puntas)</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PARTE INFERIOR: 03 REPORTE ANALÍTICO -->
+    <div class="bottom-container">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="number">03</span> Reporte analítico
+                </div>
+            </div>
+
+            <div class="report-summary-cards">
+                <div class="stat-card">
+                    <div class="label">&sum; Fx</div>
+                    <div class="value" id="statFx">0.00 <span class="unit">newtons</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">&sum; Fy</div>
+                    <div class="value" id="statFy">0.00 <span class="unit">newtons</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">MAGNITUD |R|</div>
+                    <div class="value" id="statMagR" style="color: var(--accent-yellow);">0.00 <span class="unit">newtons</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">DIRECCIÓN &theta;</div>
+                    <div class="value" id="statAngR">0.0&deg; <span class="unit" id="statQuadR">desde +X</span></div>
+                </div>
+            </div>
+
+            <!-- APARTADO 1 DESPLEGABLE: DCL Y COMPONENTES INDIVIDUALES -->
+            <details class="collapsible-section" id="detailsDCL" ontoggle="alCambiarDesplegable()">
+                <summary class="collapsible-header">
+                    <span>Desarrollo de cada fuerza (DCL + Componentes)</span>
+                    <span class="arrow-icon">&#9660;</span>
+                </summary>
+                <div class="collapsible-content">
+                    <div class="dcl-grid" id="dclContainer">
+                        <!-- Mini DCLs generados dinámicamente -->
+                    </div>
+                </div>
+            </details>
+
+            <!-- APARTADO 2 DESPLEGABLE: SUMATORIA Y RESULTANTE CON PROCEDIMIENTO -->
+            <details class="collapsible-section" id="detailsSumatoria">
+                <summary class="collapsible-header">
+                    <span style="color: var(--accent-green);">Sumatoria y resultante</span>
+                    <span class="arrow-icon">&#9660;</span>
+                </summary>
+                <div class="collapsible-content">
+                    <div class="math-breakdown-panel">
+                        <div id="mathFxText">&sum;Fx = 0.00 N</div>
+                        <div id="mathFyText">&sum;Fy = 0.00 N</div>
+                        <div id="mathRText" style="margin-top: 6px;">|R| = &radic;((0.00)&sup2; + (0.00)&sup2;) = 0.00 N</div>
+                        <div id="mathThetaText">&theta; = atan2(0.00, 0.00) = 0.0&deg;</div>
+                    </div>
+                </div>
+            </details>
+
+            <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text-muted);">Módulo, dirección y sentido (Gráfica Resultante)</h3>
+            <div class="resultant-detail-box">
+                <div class="resultant-canvas-box">
+                    <canvas id="canvasResultante" width="200" height="200"></canvas>
+                </div>
+                <div class="resultant-info-list">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">VECTOR RESULTANTE</div>
+                    <div class="resultant-header-val" id="resSummaryHeader">R = 0.00 N &ang; 0.0&deg;</div>
+                    
+                    <div class="info-item">
+                        <div class="lbl">Módulo</div>
+                        <div class="val" id="resSummaryMod">0.00 N</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Dirección</div>
+                        <div class="val" id="resSummaryDir">0.0&deg; desde +X</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="lbl">Sentido</div>
+                        <div class="val" id="resSummarySen">+X / +Y</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const COLOR_PALETTE = ['#ff7b72', '#3fb950', '#58a6ff', '#bc8cff', '#f0883e', '#79c0ff'];
+
+        let vectores = [
+            { id: 1, nombre: 'F₁', magnitud: 80, angulo: 30, color: COLOR_PALETTE[0] },
+            { id: 2, nombre: 'F₂', magnitud: 60, angulo: 150, color: COLOR_PALETTE[1] },
+            { id: 3, nombre: 'F₃', magnitud: 40, angulo: 270, color: COLOR_PALETTE[2] }
+        ];
+
+        let vectorIdCounter = 4;
+        let isDragging = false;
+        let selectedVectorIndex = -1;
+
+        const mainCanvas = document.getElementById('planoCartesiano');
+        const mainCtx = mainCanvas.getContext('2d');
+        const resCanvas = document.getElementById('canvasResultante');
+        const resCtx = resCanvas.getContext('2d');
+
+        window.addEventListener('load', () => {
+            renderVectorInputs();
+            actualizarTodo();
+            setupCanvasInteraction();
+        });
+
+        function alCambiarDesplegable() {
+            // Cuando el usuario despliega la sección DCL, redibujamos los canvas mini
+            const detailsDCL = document.getElementById('detailsDCL');
+            if (detailsDCL && detailsDCL.open) {
+                renderDCLGrid();
+            }
+        }
+
+        function agregarNuevoVector() {
+            const nextColor = COLOR_PALETTE[(vectores.length) % COLOR_PALETTE.length];
+            vectores.push({
+                id: vectorIdCounter,
+                nombre: `F${subscriptNumber(vectorIdCounter)}`,
+                magnitud: 50,
+                angulo: 45,
+                color: nextColor
+            });
+            vectorIdCounter++;
+            renderVectorInputs();
+            actualizarTodo();
+        }
+
+        function eliminarVector(id) {
+            vectores = vectores.filter(v => v.id !== id);
+            renderVectorInputs();
+            actualizarTodo();
+        }
+
+        function subscriptNumber(n) {
+            const subs = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+            return n.toString().split('').map(d => subs[parseInt(d)]).join('');
+        }
+
+        function updateVectorValue(id, prop, val) {
+            const v = vectores.find(item => item.id === id);
+            if (v) {
+                v[prop] = parseFloat(val) || 0;
+                actualizarTodo();
+            }
+        }
+
+        function renderVectorInputs() {
+            const container = document.getElementById('vectorList');
+            container.innerHTML = '';
+            document.getElementById('vectorCount').innerText = `${vectores.length} VECTORES`;
+
+            vectores.forEach((v) => {
+                const card = document.createElement('div');
+                card.className = 'vector-card';
+                card.innerHTML = `
+                    <div class="vector-card-header">
+                        <div class="vector-tag">
+                            <span class="color-dot" style="background-color: ${v.color}"></span>
+                            ${v.nombre} <span style="font-size:0.8rem; color:var(--text-muted); font-weight:normal;">Vector ${v.id}</span>
+                        </div>
+                        <button class="btn-delete" onclick="eliminarVector(${v.id})">&times;</button>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>MAGNITUD</label>
+                            <div class="input-field">
+                                <input type="number" value="${v.magnitud}" step="any" oninput="updateVectorValue(${v.id}, 'magnitud', this.value)" id="input-mag-${v.id}">
+                                <span>N</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>ANGULO &theta;</label>
+                            <div class="input-field">
+                                <input type="number" value="${v.angulo}" step="any" oninput="updateVectorValue(${v.id}, 'angulo', this.value)" id="input-ang-${v.id}">
+                                <span>&deg;</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function actualizarTodo() {
+            let sumFx = 0;
+            let sumFy = 0;
+
+            vectores.forEach(v => {
+                const rad = (v.angulo * Math.PI) / 180;
+                v.fx = v.magnitud * Math.cos(rad);
+                v.fy = v.magnitud * Math.sin(rad);
+                sumFx += v.fx;
+                sumFy += v.fy;
+            });
+
+            const magR = Math.sqrt(sumFx * sumFx + sumFy * sumFy);
+            let angRRad = Math.atan2(sumFy, sumFx);
+            let angRGrad = (angRRad * 180) / Math.PI;
+            if (angRGrad < 0) angRGrad += 360;
+
+            document.getElementById('statFx').innerHTML = `${sumFx.toFixed(2)} <span class="unit">newtons</span>`;
+            document.getElementById('statFy').innerHTML = `${sumFy.toFixed(2)} <span class="unit">newtons</span>`;
+            document.getElementById('statMagR').innerHTML = `${magR.toFixed(2)} <span class="unit">newtons</span>`;
+            document.getElementById('statAngR').innerHTML = `${angRGrad.toFixed(1)}&deg; <span class="unit">desde +X</span>`;
+
+            renderDCLGrid();
+            renderMathBreakdown(sumFx, sumFy, magR, angRGrad);
+            renderResultantSummary(sumFx, sumFy, magR, angRGrad);
+            dibujarPlanoCartesiano(sumFx, sumFy);
+        }
+
+        function renderDCLGrid() {
+            const container = document.getElementById('dclContainer');
+            container.innerHTML = '';
+
+            vectores.forEach(v => {
+                const card = document.createElement('div');
+                card.className = 'dcl-card';
+                const canvasId = `dcl-canvas-${v.id}`;
+                
+                card.innerHTML = `
+                    <div class="dcl-canvas-container">
+                        <canvas id="${canvasId}" width="100" height="100"></canvas>
+                    </div>
+                    <div class="dcl-details">
+                        <div class="title">
+                            <span><span class="color-dot" style="background-color:${v.color}"></span> ${v.nombre}</span>
+                            <span style="color:var(--text-muted);">${v.magnitud.toFixed(2)} N &ang; ${v.angulo.toFixed(1)}&deg;</span>
+                        </div>
+                        <div>F<sub>x</sub> = ${v.magnitud.toFixed(2)} &middot; cos(${v.angulo.toFixed(1)}&deg;)</div>
+                        <div style="color:#fff; font-weight:bold; margin-bottom:4px;">= ${v.fx.toFixed(2)} N</div>
+                        <div>F<sub>y</sub> = ${v.magnitud.toFixed(2)} &middot; sin(${v.angulo.toFixed(1)}&deg;)</div>
+                        <div style="color:#fff; font-weight:bold;">= ${v.fy.toFixed(2)} N</div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                setTimeout(() => {
+                    const miniCanvas = document.getElementById(canvasId);
+                    if (miniCanvas) {
+                        const mCtx = miniCanvas.getContext('2d');
+                        drawMiniDCL(mCtx, v);
+                    }
+                }, 0);
+            });
+        }
+
+        function drawMiniDCL(ctx, v) {
+            const w = ctx.canvas.width;
+            const h = ctx.canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+            ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
+            ctx.stroke();
+
+            const scale = 35 / Math.max(v.magnitud, 10);
+            const destX = cx + (v.fx * scale);
+            const destY = cy - (v.fy * scale);
+
+            drawArrow(ctx, cx, cy, destX, destY, v.color, 2, 6);
+        }
+
+        function renderMathBreakdown(sumFx, sumFy, magR, angR) {
+            const fxTerms = vectores.map(v => `(${v.fx.toFixed(2)})`).join(' + ');
+            const fyTerms = vectores.map(v => `(${v.fy.toFixed(2)})`).join(' + ');
+
+            document.getElementById('mathFxText').innerText = `\u2211Fx = ${fxTerms || '0'} = ${sumFx.toFixed(2)} N`;
+            document.getElementById('mathFyText').innerText = `\u2211Fy = ${fyTerms || '0'} = ${sumFy.toFixed(2)} N`;
+            document.getElementById('mathRText').innerText = `|R| = \u221A((${sumFx.toFixed(2)})\u00B2 + (${sumFy.toFixed(2)})\u00B2) = ${magR.toFixed(2)} N`;
+            document.getElementById('mathThetaText').innerText = `\u03B8 = atan2(${sumFy.toFixed(2)}, ${sumFx.toFixed(2)}) = ${angR.toFixed(1)}\u00B0`;
+        }
+
+        function renderResultantSummary(sumFx, sumFy, magR, angR) {
+            document.getElementById('resSummaryHeader').innerText = `R = ${magR.toFixed(2)} N \u2220 ${angR.toFixed(1)}\u00B0`;
+            document.getElementById('resSummaryMod').innerText = `${magR.toFixed(2)} N`;
+            document.getElementById('resSummaryDir').innerText = `${angR.toFixed(1)}\u00B0 desde +X`;
+
+            let sentidoX = sumFx >= 0 ? '+X' : '-X';
+            let sentidoY = sumFy >= 0 ? '+Y' : '-Y';
+            document.getElementById('resSummarySen').innerText = `${sentidoX} / ${sentidoY}`;
+
+            resCtx.clearRect(0, 0, 200, 200);
+            const cx = 100, cy = 100;
+
+            resCtx.strokeStyle = '#30363d';
+            resCtx.lineWidth = 1;
+            resCtx.beginPath();
+            resCtx.moveTo(0, cy); resCtx.lineTo(200, cy);
+            resCtx.moveTo(cx, 0); resCtx.lineTo(cx, 200);
+            resCtx.stroke();
+
+            if (magR > 0.1) {
+                const scale = 70 / magR;
+                const destX = cx + (sumFx * scale);
+                const destY = cy - (sumFy * scale);
+                drawArrow(resCtx, cx, cy, destX, destY, '#f1e05a', 3, 10);
+            }
+        }
+
+        function dibujarPlanoCartesiano(sumFx, sumFy) {
+            const w = mainCanvas.width;
+            const h = mainCanvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            mainCtx.clearRect(0, 0, w, h);
+
+            let maxMag = Math.max(...vectores.map(v => v.magnitud), 50);
+            const scale = (Math.min(w, h) / 2 - 50) / maxMag;
+
+            // Rejilla
+            mainCtx.strokeStyle = '#161b22';
+            mainCtx.lineWidth = 1;
+            const gridSize = 25;
+            for (let x = 0; x < w; x += gridSize) {
+                mainCtx.beginPath(); mainCtx.moveTo(x, 0); mainCtx.lineTo(x, h); mainCtx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                mainCtx.beginPath(); mainCtx.moveTo(0, y); mainCtx.lineTo(w, y); mainCtx.stroke();
+            }
+
+            // Ejes
+            mainCtx.strokeStyle = '#30363d';
+            mainCtx.lineWidth = 2;
+            mainCtx.beginPath(); mainCtx.moveTo(20, cy); mainCtx.lineTo(w - 20, cy); mainCtx.stroke();
+            mainCtx.beginPath(); mainCtx.moveTo(cx, 20); mainCtx.lineTo(cx, h - 20); mainCtx.stroke();
+
+            mainCtx.fillStyle = '#8b949e';
+            mainCtx.font = '12px sans-serif';
+            mainCtx.fillText('+X', w - 25, cy + 15);
+            mainCtx.fillText('+Y', cx + 10, 25);
+            mainCtx.fillText('0', cx - 12, cy + 15);
+
+            vectores.forEach(v => {
+                const destX = cx + (v.fx * scale);
+                const destY = cy - (v.fy * scale);
+                drawArrow(mainCtx, cx, cy, destX, destY, v.color, 2.5, 8);
+
+                mainCtx.fillStyle = v.color;
+                mainCtx.font = 'bold 13px sans-serif';
+                mainCtx.fillText(v.nombre, destX + 8, destY - 8);
+            });
+
+            mainCtx.fillStyle = '#fff';
+            mainCtx.beginPath();
+            mainCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+            mainCtx.fill();
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, width, headLen) {
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = width;
+
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.fill();
+        }
+
+        function setupCanvasInteraction() {
+            mainCanvas.addEventListener('mousedown', (e) => {
+                const rect = mainCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const cx = mainCanvas.width / 2;
+                const cy = mainCanvas.height / 2;
+
+                let maxMag = Math.max(...vectores.map(v => v.magnitud), 50);
+                const scale = (Math.min(mainCanvas.width, mainCanvas.height) / 2 - 50) / maxMag;
+
+                for (let i = 0; i < vectores.length; i++) {
+                    const v = vectores[i];
+                    const tipX = cx + (v.fx * scale);
+                    const tipY = cy - (v.fy * scale);
+
+                    const dist = Math.hypot(mouseX - tipX, mouseY - tipY);
+                    if (dist < 15) {
+                        isDragging = true;
+                        selectedVectorIndex = i;
+                        break;
+                    }
+                }
+            });
+
+            mainCanvas.addEventListener('mousemove', (e) => {
+                if (!isDragging || selectedVectorIndex === -1) return;
+
+                const rect = mainCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const cx = mainCanvas.width / 2;
+                const cy = mainCanvas.height / 2;
+
+                let maxMag = Math.max(...vectores.map(v => v.magnitud), 50);
+                const scale = (Math.min(mainCanvas.width, mainCanvas.height) / 2 - 50) / maxMag;
+
+                const dx = (mouseX - cx) / scale;
+                const dy = -(mouseY - cy) / scale;
+
+                const newMag = Math.sqrt(dx * dx + dy * dy);
+                let newAngRad = Math.atan2(dy, dx);
+                let newAngGrad = (newAngRad * 180) / Math.PI;
+                if (newAngGrad < 0) newAngGrad += 360;
+
+                const v = vectores[selectedVectorIndex];
+                v.magnitud = parseFloat(newMag.toFixed(1));
+                v.angulo = parseFloat(newAngGrad.toFixed(1));
+
+                const inputMag = document.getElementById(`input-mag-${v.id}`);
+                const inputAng = document.getElementById(`input-ang-${v.id}`);
+                if (inputMag) inputMag.value = v.magnitud;
+                if (inputAng) inputAng.value = v.angulo;
+
+                actualizarTodo();
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+                selectedVectorIndex = -1;
+            });
+        }
+    </script>
+</body>
+</html>
